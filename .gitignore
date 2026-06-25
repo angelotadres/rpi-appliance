@@ -1,0 +1,40 @@
+# Universal ignores for any project stack.
+# Add stack-specific entries in the section at the bottom.
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Claude Code
+.claude/settings.local.json
+
+# Local lint config
+.markdownlint.jsonc
+
+# Editors / IDEs
+.idea/
+.vscode/
+*.swp
+*~
+.history/
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+
+# Logs & temp
+*.log
+tmp/
+*.bak
+
+# ---------------------------------------------------------------------------
+# Stack-specific entries — keep aligned with specs/tech-stack.md.
+# Examples (uncomment or replace as your stack dictates):
+#
+# Node:     node_modules/   npm-debug.log   yarn-error.log   .pnpm-debug.log*
+# Python:   __pycache__/    *.pyc           venv/            .venv/
+# Build:    dist/           build/          out/
+# Data:     data/           *.sqlite        *.db
+# ---------------------------------------------------------------------------
