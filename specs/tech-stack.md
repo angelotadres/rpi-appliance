@@ -171,9 +171,11 @@ No database. The shapes that matter:
   republishes only the GUI service (label `appliance.gui=true`, or the sole
   service) as `127.0.0.1:5800`. All other keys pass through untouched, so
   passthrough is unaffected. See `appliance/rootfs/opt/appliance/`.
-- **USB store provisioning:** fixed label vs. UUID; whether the appliance formats a
-  blank drive on first boot or requires the user to pre-format ext4 with a known
-  label; how compose volume paths map onto it.
+- ~~**USB store provisioning:**~~ **Resolved (Phase 3):** mount by **label
+  `APPLIANCE`** at `/mnt/appliance` via `/etc/fstab` (`nofail`); **require a
+  pre-formatted ext4 drive — never auto-format**; Docker `data-root` moved onto the
+  USB so all volumes/images live there; user composes place bind mounts via
+  `${APPLIANCE_DATA}`. `usb-preflight` refuses app start when it's absent.
 - **Tauri vs. Go+webview:** Tauri is the default; revisit only if the Rust toolchain
   proves heavy for this small app.
 - **Dev-loop emulation:** how much of the client↔appliance flow can be exercised

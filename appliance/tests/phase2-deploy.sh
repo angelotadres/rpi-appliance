@@ -10,6 +10,10 @@ CONTAINER=appliance-gui
 PROJECT=appliance
 export APPLIANCE_PROJECT="$PROJECT"
 export APPLIANCE_RUNTIME_DIR="$(mktemp -d)"
+# Phase 3 added a required USB writable store; off-Pi we point it at a temp dir and
+# don't require a real mountpoint.
+export APPLIANCE_USB_MOUNT="$(mktemp -d)"
+export APPLIANCE_REQUIRE_MOUNT=0
 
 fail() { echo "FAIL: $*" >&2; teardown; exit 1; }
 

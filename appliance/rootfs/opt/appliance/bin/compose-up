@@ -5,11 +5,13 @@
 #
 #   APPLIANCE_CONFIG_DIR   where compose.yml lives   (default /boot/firmware/appliance)
 #   APPLIANCE_RUNTIME_DIR  where the sanitized file goes (default /run/appliance)
+#   APPLIANCE_USB_MOUNT    required USB writable store (default /mnt/appliance)
 #   WEB_PORT               host loopback port for the GUI (default 5800)
 set -euo pipefail
 
 CONFIG_DIR="${APPLIANCE_CONFIG_DIR:-/boot/firmware/appliance}"
 RUNTIME_DIR="${APPLIANCE_RUNTIME_DIR:-/run/appliance}"
+USB_MOUNT="${APPLIANCE_USB_MOUNT:-/mnt/appliance}"
 PROJECT="${APPLIANCE_PROJECT:-appliance}"
 SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -18,6 +20,14 @@ if [ ! -f "$user_compose" ]; then
   echo "compose-up: no compose.yml in $CONFIG_DIR" >&2
   exit 1
 fi
+
+# The USB writable store is required: refuse to start the app without it. The
+# preflight's reason goes to stderr (captured by the Phase 6 setup log).
+"$SELF_DIR/usb-preflight" || { echo "compose-up: refusing to start the app — USB writable store unavailable" >&2; exit 1; }
+
+# Expose the on-USB data dir so user composes can place bind mounts via ${APPLIANCE_DATA}.
+export APPLIANCE_DATA="${APPLIANCE_DATA:-$USB_MOUNT/data}"
+mkdir -p "$APPLIANCE_DATA"
 
 mkdir -p "$RUNTIME_DIR"
 runtime_compose="$RUNTIME_DIR/compose.yml"

@@ -5,12 +5,25 @@ image root in Phase 7). The first-boot service (Phase 6) calls these.
 
 ## `bin/compose-up`
 
-Reads the boot-folder compose, enforces the loopback invariant, and brings the app
-stack up.
+Runs the USB preflight, enforces the loopback invariant, and brings the app stack up.
 
 - `APPLIANCE_CONFIG_DIR` — where `compose.yml` lives (default `/boot/firmware/appliance`).
 - `APPLIANCE_RUNTIME_DIR` — where the sanitized compose is written (default `/run/appliance`).
+- `APPLIANCE_USB_MOUNT` — required USB writable store (default `/mnt/appliance`).
 - `WEB_PORT` — host loopback port for the GUI (default `5800`).
+
+It exports `APPLIANCE_DATA` (default `/mnt/appliance/data`) before running compose, so
+user composes can place bind mounts on the USB via `${APPLIANCE_DATA}/...`.
+
+## `bin/usb-preflight` — the required writable store
+
+The USB drive (ext4, labelled `APPLIANCE`, mounted at `/mnt/appliance`) is the single
+writable store. `compose-up` calls this first and **refuses to start the app** if the
+drive is missing or unwritable, printing a one-line reason (captured by the Phase 6
+setup log). Docker's `data-root` is relocated onto the USB (`etc/docker/daemon.json`)
+so all images and named volumes live there too — required once the SD root goes
+read-only (Phase 4). The drive must be pre-formatted ext4; the appliance never
+auto-formats.
 
 It runs `docker compose` with `--project-directory $APPLIANCE_CONFIG_DIR`, so the
 user's relative build contexts and bind-mount paths still resolve.

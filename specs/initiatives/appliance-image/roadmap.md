@@ -38,10 +38,12 @@ compose.
 **Goal:** A USB drive is the single writable store; app data and compose volumes
 live there; the app refuses to start without it.
 
-- [ ] Auto-mount ext4 USB by label/UUID via `/etc/fstab` at a fixed path.
-- [ ] App data and compose volumes routed onto the USB.
-- [ ] Missing USB → app does not start; reason captured for the setup log.
-- [ ] Verify: with USB, data persists across a container recreate; without it, the
+- [x] Auto-mount ext4 USB by label/UUID via `/etc/fstab` at a fixed path.
+      (`fstab.append`, label `APPLIANCE` → `/mnt/appliance`; real mount tested Phase 8.)
+- [x] App data and compose volumes routed onto the USB. (Docker `data-root` on USB +
+      `${APPLIANCE_DATA}`.)
+- [x] Missing USB → app does not start; reason captured for the setup log.
+- [x] Verify: with USB, data persists across a container recreate; without it, the
       app halts with a clear reason.
 
 ## Phase 4: Read-only root and power resilience
