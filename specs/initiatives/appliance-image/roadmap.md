@@ -11,10 +11,12 @@ a separate initiative; here, the SSH-tunnel/key access is validated manually
 **Goal:** A containerized GUI app reachable as noVNC with the web file manager,
 bound to loopback — proven off-Pi with a throwaway sample app (no Carbide).
 
-- [ ] Run config on `jlesage/baseimage-gui` running a sample GUI app; noVNC + web
+- [x] Run config on `jlesage/baseimage-gui` running a sample GUI app; noVNC + web
       file manager enabled.
-- [ ] GUI port bound to `127.0.0.1` only.
-- [ ] Verify on any Docker host: noVNC loads; file manager lists/uploads/deletes.
+- [x] GUI port bound to `127.0.0.1` only.
+- [x] Verify on any Docker host: noVNC loads; file manager lists/uploads/deletes.
+      (Automated: smoke test asserts noVNC + loopback-only. File-manager
+      upload/delete + GUI render pending end-of-initiative human review.)
 
 ## Phase 2: Compose-driven app deployment from the boot folder
 
@@ -22,12 +24,13 @@ bound to loopback — proven off-Pi with a throwaway sample app (no Carbide).
 folder; the appliance runs it and forces the GUI to loopback regardless of the
 compose.
 
-- [ ] First-run logic reads `<config-folder>/compose.yml` and brings the stack up.
-- [ ] Mechanism guaranteeing the GUI binds loopback even if the compose publishes
+- [x] First-run logic reads `<config-folder>/compose.yml` and brings the stack up.
+- [x] Mechanism guaranteeing the GUI binds loopback even if the compose publishes
       ports to `0.0.0.0`.
-- [ ] USB device passthrough honored from the compose (targeted `devices:` and the
-      `privileged`+`/dev`+`/run/udev` escape hatch).
-- [ ] Verify off-Pi: swapping the compose runs a different app; no published port
+- [x] USB device passthrough honored from the compose (targeted `devices:` and the
+      `privileged`+`/dev`+`/run/udev` escape hatch). (Pass-through by design; full
+      device test deferred to Phase 8 hardware.)
+- [x] Verify off-Pi: swapping the compose runs a different app; no published port
       reaches a non-loopback interface.
 
 ## Phase 3: Required USB writable store

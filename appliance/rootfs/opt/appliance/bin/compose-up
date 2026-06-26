@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# compose-up: read the boot-folder compose.yml, enforce the loopback invariant,
+# and bring the app stack up. Invoked by the first-boot service (Phase 6); usable
+# standalone for dev/tests.
+#
+#   APPLIANCE_CONFIG_DIR   where compose.yml lives   (default /boot/firmware/appliance)
+#   APPLIANCE_RUNTIME_DIR  where the sanitized file goes (default /run/appliance)
+#   WEB_PORT               host loopback port for the GUI (default 5800)
+set -euo pipefail
+
+CONFIG_DIR="${APPLIANCE_CONFIG_DIR:-/boot/firmware/appliance}"
+RUNTIME_DIR="${APPLIANCE_RUNTIME_DIR:-/run/appliance}"
+PROJECT="${APPLIANCE_PROJECT:-appliance}"
+SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+user_compose="$CONFIG_DIR/compose.yml"
+if [ ! -f "$user_compose" ]; then
+  echo "compose-up: no compose.yml in $CONFIG_DIR" >&2
+  exit 1
+fi
+
+mkdir -p "$RUNTIME_DIR"
+runtime_compose="$RUNTIME_DIR/compose.yml"
+
+# Sanitize (strip LAN ports, pin the GUI to loopback) before anything runs.
+"$SELF_DIR/../lib/sanitize-compose.sh" "$user_compose" > "$runtime_compose"
+
+# Run with the config dir as the project directory so the user's relative build
+# contexts and bind-mount paths still resolve.
+exec docker compose -p "$PROJECT" --project-directory "$CONFIG_DIR" \
+  -f "$runtime_compose" up -d

@@ -1,0 +1,10 @@
+# Fixture: a different app (xterm). No published ports declared at all — the
+# appliance still publishes the GUI on loopback for us.
+services:
+  xterm:
+    build: ./
+    image: rpi-appliance/alt-app:dev
+    container_name: appliance-gui
+    labels:
+      appliance.gui: "true"
+    restart: unless-stopped

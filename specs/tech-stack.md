@@ -146,7 +146,8 @@ No database. The shapes that matter:
 
 ## Dependencies
 
-- pi-gen, Docker, `jlesage/baseimage-gui`, systemd (appliance side).
+- pi-gen, Docker, `jlesage/baseimage-gui`, systemd, `yq` (compose sanitize) —
+  appliance side.
 - OpenSSH (both ends — OS-provided).
 - Tauri / Rust toolchain + OS webview (client side).
 - **Risk flags:** Tauri build/release per-OS and code-signing/notarization (deferred
@@ -165,9 +166,11 @@ No database. The shapes that matter:
   first-boot script also wipe the password line from the boot partition?
 - **Shutdown mechanism:** client-issued `ssh … poweroff` only, or also keep a tiny
   loopback-bound shutdown service as a fallback?
-- **Compose security enforcement:** exact mechanism for guaranteeing the GUI binds
-  loopback regardless of the user's compose (override published ports, a fixed
-  network, or a validation/reject step).
+- ~~**Compose security enforcement:**~~ **Resolved (Phase 2):** `compose-up`
+  sanitizes the user's compose with `yq` — strips every service's `ports`, then
+  republishes only the GUI service (label `appliance.gui=true`, or the sole
+  service) as `127.0.0.1:5800`. All other keys pass through untouched, so
+  passthrough is unaffected. See `appliance/rootfs/opt/appliance/`.
 - **USB store provisioning:** fixed label vs. UUID; whether the appliance formats a
   blank drive on first boot or requires the user to pre-format ext4 with a known
   label; how compose volume paths map onto it.
