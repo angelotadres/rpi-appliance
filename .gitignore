@@ -31,10 +31,24 @@ tmp/
 
 # ---------------------------------------------------------------------------
 # Stack-specific entries — keep aligned with specs/tech-stack.md.
-# Examples (uncomment or replace as your stack dictates):
-#
-# Node:     node_modules/   npm-debug.log   yarn-error.log   .pnpm-debug.log*
-# Python:   __pycache__/    *.pyc           venv/            .venv/
-# Build:    dist/           build/          out/
-# Data:     data/           *.sqlite        *.db
 # ---------------------------------------------------------------------------
+
+# Tauri client app (Rust + OS webview)
+target/
+src-tauri/target/
+src-tauri/gen/
+
+# Frontend tooling for the Tauri webview
+node_modules/
+dist/
+.vite/
+
+# pi-gen image build artifacts (built/flashable images, not committed)
+*.img
+*.img.xz
+*.zip
+pi-gen/
+deploy/
+
+# Build-time downloads (container .debs, icons, base images)
+downloads/
