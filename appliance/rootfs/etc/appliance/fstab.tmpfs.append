@@ -1,0 +1,4 @@
+# Appended to /etc/fstab by the image build (Phase 7). With a read-only overlay root,
+# route high-churn write paths to RAM so nothing hits the SD overlay.
+tmpfs /tmp     tmpfs defaults,nosuid,nodev,size=128M 0 0
+tmpfs /var/tmp tmpfs defaults,nosuid,nodev,size=64M  0 0

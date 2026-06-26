@@ -51,10 +51,12 @@ live there; the app refuses to start without it.
 **Goal:** The SD root is read-only; abrupt power loss cannot corrupt the system;
 all writes route to USB/tmpfs.
 
-- [ ] Enable overlayfs read-only root; route writes to USB/tmpfs.
-- [ ] Confirm app data persists on the USB across reboot.
-- [ ] Verify: repeated hard power cuts leave the system bootable and USB data
-      intact (emulated where possible; real cuts deferred to Phase 8).
+- [x] Enable overlayfs read-only root; route writes to USB/tmpfs. (`enable-readonly-root`
+      + tmpfs/volatile-journald config; machinery in place, mount tested Phase 8.)
+- [~] Confirm app data persists on the USB across reboot. (Routing in place;
+      real reboot test deferred to Phase 8 hardware.)
+- [~] Verify: repeated hard power cuts leave the system bootable and USB data
+      intact. (Hardware-only — Phase 8. Structural validation done off-Pi.)
 
 ## Phase 5: Secure access (host side)
 

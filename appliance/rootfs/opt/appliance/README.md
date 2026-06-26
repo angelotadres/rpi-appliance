@@ -51,3 +51,12 @@ base image's web port `5800` (true for anything built on `jlesage/baseimage-gui`
 
 Uses [`yq`](https://github.com/mikefarah/yq) for the YAML edit; falls back to a
 dockerized `yq` when no host binary is present (so dev hosts/CI need no install).
+
+## `bin/enable-readonly-root` — power-loss resilience
+
+Enables Raspberry Pi OS overlayfs so the SD root is read-only: RAM-overlay writes are
+discarded on reboot, so an abrupt power cut can't corrupt the system. All data lives
+on the USB (Docker data-root + `${APPLIANCE_DATA}`), so nothing is lost. `/tmp` and
+`/var/tmp` are tmpfs and journald logs are volatile (`etc/` drop-ins), keeping runtime
+writes off the SD. The `/boot` partition stays writable for the setup log. Real
+power-cut resilience is validated on hardware in Phase 8.
