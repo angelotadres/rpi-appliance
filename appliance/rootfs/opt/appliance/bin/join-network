@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Join the network from the boot folder. Wi-Fi is configured by wifi.txt; Ethernet
+# needs no config. Pi OS Bookworm uses NetworkManager (nmcli).
+#
+# wifi.txt keys (one per line): SSID=..., PSK=... (or PASSWORD=...), COUNTRY=...
+set -euo pipefail
+
+CONFIG_DIR="${APPLIANCE_CONFIG_DIR:-/boot/firmware/appliance}"
+wifi="$CONFIG_DIR/wifi.txt"
+
+if [ ! -f "$wifi" ]; then
+  echo "no wifi.txt — assuming wired Ethernet"
+  exit 0
+fi
+
+# Parse without echoing secrets.
+ssid=""; psk=""; country=""
+while IFS='=' read -r key val; do
+  key="$(echo "$key" | tr '[:lower:]' '[:upper:]' | tr -d '[:space:]')"
+  val="${val%$'\r'}"; val="${val#"${val%%[![:space:]]*}"}"; val="${val%"${val##*[![:space:]]}"}"
+  case "$key" in
+    SSID) ssid="$val" ;;
+    PSK|PASSWORD) psk="$val" ;;
+    COUNTRY) country="$val" ;;
+    ''|\#*) ;;
+  esac
+done < "$wifi"
+
+[ -n "$ssid" ] || { echo "wifi.txt has no SSID" >&2; exit 1; }
+
+if ! command -v nmcli >/dev/null 2>&1; then
+  echo "nmcli not present — skipping Wi-Fi config (not a Pi OS host)"
+  exit 0
+fi
+
+[ -n "$country" ] && iw reg set "$country" 2>/dev/null || true
+
+if [ -n "$psk" ]; then
+  nmcli dev wifi connect "$ssid" password "$psk"
+else
+  nmcli dev wifi connect "$ssid"
+fi
+echo "joined Wi-Fi SSID '$ssid'"

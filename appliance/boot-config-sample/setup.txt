@@ -1,0 +1,8 @@
+# Setup auth — ONE of the two forms below. No default credential ever ships.
+#
+# Form A (recommended): paste your computer's SSH PUBLIC key on one line.
+#   ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA... you@your-computer
+#
+# Form B: a one-off setup password (single-use; disabled after the client pushes a
+# key and runs lockdown). Uncomment and choose your own:
+#   password=choose-a-strong-one-off-password

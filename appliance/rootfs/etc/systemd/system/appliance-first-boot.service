@@ -1,0 +1,16 @@
+[Unit]
+Description=Appliance first-boot setup (network, auth, app) + setup log
+Wants=network-online.target docker.service
+After=network-online.target docker.service
+ConditionPathExists=/boot/firmware/appliance/compose.yml
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/opt/appliance/bin/first-boot
+# Setup-scoped; runtime logs come from journald / docker logs.
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

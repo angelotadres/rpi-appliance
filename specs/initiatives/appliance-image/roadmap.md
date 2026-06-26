@@ -78,12 +78,15 @@ folder — no default credentials, with lockdown supported.
 **Goal:** One first-boot flow reads the boot config folder, joins the network,
 applies setup auth, brings up the app, and writes a setup log to the boot partition.
 
-- [ ] `wifi.txt` → network join (Wi-Fi; Ethernet works with no config).
-- [ ] A systemd first-boot service orchestrates Phases 2–5 in order.
-- [ ] Write `setup.log` to the boot partition (each step ✓/FAILED + reason),
+- [x] `wifi.txt` → network join (Wi-Fi; Ethernet works with no config). (`join-network`;
+      real Wi-Fi join = Phase 8.)
+- [x] A systemd first-boot service orchestrates Phases 2–5 in order.
+      (`appliance-first-boot.service` → `first-boot`.)
+- [x] Write `setup.log` to the boot partition (each step ✓/FAILED + reason),
       scoped to the setup phase only.
-- [ ] Verify (structure, off-Pi via a dry-run): `setup.log` is readable from the
-      FAT boot partition after a failed/successful setup.
+- [x] Verify (structure, off-Pi via a dry-run): `setup.log` is readable from the
+      FAT boot partition after a failed/successful setup. (phase6 test: 15 checks,
+      happy + failure paths.)
 
 ## Phase 7: Flashable image build (pi-gen) + CI
 

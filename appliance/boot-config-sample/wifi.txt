@@ -1,0 +1,5 @@
+# Wi-Fi config for the appliance. Delete this file to use wired Ethernet.
+# (Ethernet needs no configuration.)
+SSID=my-network
+PSK=my-wifi-password
+COUNTRY=US

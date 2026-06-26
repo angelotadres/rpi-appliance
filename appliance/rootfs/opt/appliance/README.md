@@ -52,6 +52,17 @@ base image's web port `5800` (true for anything built on `jlesage/baseimage-gui`
 Uses [`yq`](https://github.com/mikefarah/yq) for the YAML edit; falls back to a
 dockerized `yq` when no host binary is present (so dev hosts/CI need no install).
 
+## `bin/first-boot` + `bin/join-network` — headless orchestration
+
+`appliance-first-boot.service` (oneshot) runs `first-boot` on boot. It joins the
+network (`join-network` reads `wifi.txt`; Ethernet needs no config), applies setup
+auth, and brings up the app — writing a step-by-step `setup.log` to the boot
+partition so a headless box is diagnosable by pulling the SD. Network failure is
+logged but non-fatal; auth/app failure aborts with the reason logged. Read-only root
+is enabled as an optional final step (`APPLIANCE_ENABLE_READONLY=1`, then reboot) so
+`authorized_keys` is persisted before the SD goes read-only. Sample boot-folder files
+are in `appliance/boot-config-sample/`.
+
 ## `bin/apply-setup-auth` + `bin/lockdown` — secure access
 
 SSH is the sole network-facing service and the only auth boundary; everything else is

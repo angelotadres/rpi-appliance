@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# Headless first-boot orchestrator. Reads the boot config folder, joins the network,
+# applies setup auth, and brings up the app — writing a step-by-step setup.log to the
+# boot partition so a headless box is diagnosable by pulling the SD.
+#
+# Order matters: first boot runs on a WRITABLE root so authorized_keys persists before
+# read-only root is (optionally) enabled as the final step.
+set -uo pipefail
+
+CONFIG_DIR="${APPLIANCE_CONFIG_DIR:-/boot/firmware/appliance}"
+SETUP_LOG="${APPLIANCE_SETUP_LOG:-$CONFIG_DIR/setup.log}"
+SELF="$(cd "$(dirname "$0")" && pwd)"
+
+# Steps are overridable so the orchestration is testable off-Pi.
+NET_CMD="${APPLIANCE_NET_CMD:-$SELF/join-network}"
+AUTH_CMD="${APPLIANCE_AUTH_CMD:-$SELF/apply-setup-auth}"
+APP_CMD="${APPLIANCE_APP_CMD:-$SELF/compose-up}"
+
+mkdir -p "$CONFIG_DIR"
+: > "$SETUP_LOG"
+
+ts()  { date -u +%Y-%m-%dT%H:%M:%SZ; }
+log() { printf '%s %s\n' "$(ts)" "$*" >> "$SETUP_LOG"; }
+
+# run_step NAME CMD...  -> logs [ OK ]/[FAIL] + captured output; returns the rc.
+run_step() {
+  local name="$1"; shift
+  local out rc
+  out="$("$@" 2>&1)"; rc=$?
+  if [ "$rc" -eq 0 ]; then
+    log "[ OK ] $name"
+  else
+    log "[FAIL] $name: ${out:-exit $rc}"
+  fi
+  [ -n "$out" ] && printf '%s\n' "$out" | sed 's/^/           /' >> "$SETUP_LOG"
+  return "$rc"
+}
+
+log "=== appliance first-boot setup ($(ts)) ==="
+
+# Network: log but do not abort (wired Ethernet may already be up).
+run_step "network join" "$NET_CMD" || log "       (continuing; network may be wired)"
+
+# Setup auth: required.
+if ! run_step "setup auth" "$AUTH_CMD"; then
+  log "=== setup ABORTED: authentication step failed ==="
+  exit 1
+fi
+
+# App: required (includes the USB preflight).
+if ! run_step "app start" "$APP_CMD"; then
+  log "=== setup ABORTED: app failed to start ==="
+  exit 1
+fi
+
+# Optional: lock the SD root read-only as the final step, then reboot.
+if [ "${APPLIANCE_ENABLE_READONLY:-0}" = "1" ]; then
+  run_step "enable read-only root" "$SELF/enable-readonly-root" || true
+  log "=== setup complete; rebooting into read-only root ==="
+  command -v systemctl >/dev/null 2>&1 && systemctl reboot || true
+  exit 0
+fi
+
+log "=== setup complete ==="

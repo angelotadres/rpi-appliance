@@ -1,0 +1,20 @@
+# The app to run, declared as data. The appliance forces the GUI to loopback
+# regardless of what this file says (see opt/appliance). Label the GUI service
+# `appliance.gui: "true"` (or have a single service). Put writable data on the USB
+# via ${APPLIANCE_DATA}. Device passthrough (devices/group_add/privileged) is honored.
+services:
+  app:
+    image: rpi-appliance/sample-app:dev   # replace with your app image
+    labels:
+      appliance.gui: "true"
+    environment:
+      WEB_FILE_MANAGER: "1"
+      WEB_FILE_MANAGER_ALLOWED_PATHS: "/data"
+    volumes:
+      - ${APPLIANCE_DATA}/app:/data
+    restart: unless-stopped
+    # Example CNC passthrough (uncomment on hardware):
+    # devices:
+    #   - "/dev/ttyUSB0:/dev/ttyUSB0"
+    # group_add:
+    #   - dialout
