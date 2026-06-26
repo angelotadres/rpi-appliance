@@ -56,3 +56,6 @@ downloads/
 # Sample-app runtime file-manager uploads (keep the dir, not its contents)
 appliance/sample-app/data/*
 !appliance/sample-app/data/.gitkeep
+
+# pi-gen working clone (Phase 7 build)
+.pi-gen/

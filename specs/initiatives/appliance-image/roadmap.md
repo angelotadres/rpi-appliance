@@ -93,12 +93,14 @@ applies setup auth, brings up the app, and writes a setup log to the boot partit
 **Goal:** A single reproducible standard `.img` that boots into the appliance with
 zero manual steps — the deliverable.
 
-- [ ] pi-gen config (run in Docker) baking Phases 1–6 into the standard image.
-- [ ] CI builds the image and publishes a release artifact.
-- [ ] README: flashing, the one config folder (`wifi.txt`/`setup.txt`/`compose.yml`),
+- [x] pi-gen config (run in Docker) baking Phases 1–6 into the standard image.
+      (`appliance/image/` stage + `build.sh`; assembler dry-run validated off-Pi.)
+- [x] CI builds the image and publishes a release artifact. (`build-image.yml`;
+      runs in CI — not executed locally.)
+- [x] README: flashing, the one config folder (`wifi.txt`/`setup.txt`/`compose.yml`),
       and the USB requirement.
-- [ ] Verify: flash → boot → (manual `ssh -L` tunnel) GUI in the browser; full
-      smoke path deferred to Phase 8.
+- [~] Verify: flash → boot → (manual `ssh -L` tunnel) GUI in the browser. (Real
+      flash/boot/tunnel = Phase 8 hardware; CI produces the image.)
 
 ## Phase 8: On-Pi stabilization + Carbide acceptance
 

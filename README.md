@@ -12,10 +12,11 @@ It comes in two parts:
 - **A cross-platform desktop client** — opens the SSH tunnel in the background and
   renders the app's GUI as a native window. One click in, one click out.
 
-> **Status:** early development. The design (constitution) is set under
-> [`specs/`](specs/); implementation is proceeding phase by phase per the
-> [appliance-image roadmap](specs/initiatives/appliance-image/roadmap.md). Flashing
-> and usage instructions will land here as the phases that build them ship.
+> **Status:** early development. The appliance-image host stack (Phases 1–6) is
+> implemented and tested off-Pi; the pi-gen image build + CI (Phase 7) is in place and
+> builds in CI. On-hardware validation and the CNC acceptance test are
+> [Phase 8](specs/initiatives/appliance-image/roadmap.md). The desktop client is a
+> separate, later initiative.
 
 ## Why
 
@@ -33,14 +34,18 @@ you could run on top of it.
 
 ## How it works
 
-```
-Your computer                          Raspberry Pi (headless, read-only SD)
-┌─────────────────────┐                ┌─────────────────────────────────────┐
-│ Desktop client app  │   SSH tunnel   │ sshd (key-only)                      │
-│  (webview + ssh)    │ ─────key────▶  │   └▶ 127.0.0.1 : noVNC (loopback)    │
-└─────────────────────┘                │        └▶ your app (Docker Compose)  │
-                                        │ USB drive = the only writable store  │
-                                        └─────────────────────────────────────┘
+```mermaid
+flowchart LR
+    App["Desktop client app<br/>(webview + ssh)"]
+    subgraph Pi["Raspberry Pi — headless, read-only SD"]
+        SSHD["sshd (key-only)"]
+        noVNC["127.0.0.1 : noVNC<br/>(loopback)"]
+        AppC["your app<br/>(Docker Compose)"]
+        USB[("USB drive =<br/>only writable store")]
+        SSHD --> noVNC --> AppC
+        AppC -.writes.-> USB
+    end
+    App -- "SSH tunnel (key)" --> SSHD
 ```
 
 - **One key, one computer.** The SSH key is the single gate — for the GUI, files,
@@ -52,6 +57,29 @@ Your computer                          Raspberry Pi (headless, read-only SD)
 - **Customize after flashing.** One boot-partition folder holds everything you edit:
   `wifi.txt`, `setup.txt` (your one-off setup password or public key), and
   `compose.yml` (the app to run, including any USB device passthrough).
+
+## Flashing & first boot
+
+1. **Get the image.** Build it with [`appliance/image/build.sh`](appliance/image/build.sh)
+   (Linux + Docker), or download the `.img.xz` artifact from the `build-image` CI run.
+2. **Flash** it to an SD card (Raspberry Pi Imager, `dd`, etc.).
+3. **Edit the one config folder** on the boot partition (`/appliance`, FAT — editable
+   on any computer). Samples are in [`appliance/boot-config-sample/`](appliance/boot-config-sample/):
+   - `wifi.txt` — SSID/password/country (delete it for wired Ethernet).
+   - `setup.txt` — your SSH **public key** (recommended) or a one-off `password=…`.
+   - `compose.yml` — the app to run (label the GUI service `appliance.gui: "true"`).
+4. **Plug in a USB drive** formatted **ext4** and labelled **`APPLIANCE`** — it is
+   required and holds all data (the app won't start without it).
+5. **Boot.** First boot joins the network, provisions access, and starts the app,
+   writing a `setup.log` to the boot partition (readable by pulling the SD if you
+   can't connect yet).
+6. **Connect** (until the desktop client ships): tunnel the loopback noVNC port and
+   open it in a browser —
+   `ssh -i <key> -L 5800:127.0.0.1:5800 pi@<appliance-host>` then <http://localhost:5800>.
+
+The standard image ships **no app** — `compose.yml` points at your own image. The dev
+sample (Candle, an open GRBL sender) lives in [`appliance/sample-app/`](appliance/sample-app/)
+for testing the plumbing off-Pi.
 
 ## Client app platforms
 
