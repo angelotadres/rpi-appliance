@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Lock the appliance to key-only. Called once a key is installed (by the client, or
+# after a pubkey setup.txt). Makes the one-off setup password single-use:
+#   - PasswordAuthentication no (remove the setup window)
+#   - passwd -l the user (the OS password can never be used again)
+#   - strip the password= line from setup.txt (don't leave the secret on the FAT card)
+# Refuses if there is no authorized key, so it can't lock everyone out.
+set -euo pipefail
+
+CONFIG_DIR="${APPLIANCE_CONFIG_DIR:-/boot/firmware/appliance}"
+USER_NAME="${APPLIANCE_USER:-pi}"
+SETUP_DROPIN="${SSHD_SETUP_DROPIN:-/etc/ssh/sshd_config.d/00-appliance-setup.conf}"
+
+home="$(getent passwd "$USER_NAME" | cut -d: -f6)"
+ak="$home/.ssh/authorized_keys"
+
+if [ ! -s "$ak" ] || ! grep -qE '^(ssh-|ecdsa-|sk-)' "$ak"; then
+  echo "lockdown: refusing — no authorized key for '$USER_NAME'; would lock out all access" >&2
+  exit 1
+fi
+
+printf '%s\n' "PasswordAuthentication no" > "$SETUP_DROPIN"
+passwd -l "$USER_NAME" >/dev/null 2>&1 || true
+
+setup="$CONFIG_DIR/setup.txt"
+if [ -f "$setup" ] && grep -qiE '^[[:space:]]*password[:=]' "$setup"; then
+  tmp="$(mktemp)"
+  # `|| true`: grep -v exits 1 when nothing remains (file was only the password line).
+  grep -viE '^[[:space:]]*password[:=]' "$setup" > "$tmp" || true
+  cat "$tmp" > "$setup"
+  rm -f "$tmp"
+  echo "lockdown: removed setup password from $setup"
+fi
+
+# Apply to a running sshd if present (best-effort; safe when not running).
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl reload ssh 2>/dev/null || systemctl reload sshd 2>/dev/null || true
+fi
+
+echo "lockdown: appliance is key-only for '$USER_NAME'; setup password invalidated."

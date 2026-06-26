@@ -52,6 +52,24 @@ base image's web port `5800` (true for anything built on `jlesage/baseimage-gui`
 Uses [`yq`](https://github.com/mikefarah/yq) for the YAML edit; falls back to a
 dockerized `yq` when no host binary is present (so dev hosts/CI need no install).
 
+## `bin/apply-setup-auth` + `bin/lockdown` — secure access
+
+SSH is the sole network-facing service and the only auth boundary; everything else is
+loopback (Phase 2). `etc/ssh/sshd_config.d/10-appliance.conf` is key-only by default
+(no root login, TCP forwarding kept on for the tunnel).
+
+`apply-setup-auth` reads `<config>/setup.txt`:
+
+- a **public key** line (`ssh-ed25519 …`) → installed to `authorized_keys`, password
+  auth stays off (key-only immediately);
+- `password=SECRET` → sets the user password and opens a **temporary** password window
+  (a `00-appliance-setup.conf` drop-in that sorts ahead of the key-only baseline).
+
+`lockdown` makes the setup password single-use: password auth off, `passwd -l` the
+user, and the `password=` line stripped from `setup.txt`. It refuses if no key is
+installed (never locks everyone out). The client initiative automates key push +
+lockdown; here they're driven manually.
+
 ## `bin/enable-readonly-root` — power-loss resilience
 
 Enables Raspberry Pi OS overlayfs so the SD root is read-only: RAM-overlay writes are

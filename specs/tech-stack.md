@@ -162,8 +162,9 @@ No database. The shapes that matter:
 
 ## Open Questions
 
-- **Setup-password lifecycle:** is disabling password auth sufficient, or should the
-  first-boot script also wipe the password line from the boot partition?
+- ~~**Setup-password lifecycle:**~~ **Resolved (Phase 5):** `lockdown` does all
+  three — `PasswordAuthentication no`, `passwd -l` the user, **and** strips the
+  `password=` line from `setup.txt` so the secret doesn't linger on the FAT card.
 - **Shutdown mechanism:** client-issued `ssh … poweroff` only, or also keep a tiny
   loopback-bound shutdown service as a fallback?
 - ~~**Compose security enforcement:**~~ **Resolved (Phase 2):** `compose-up`

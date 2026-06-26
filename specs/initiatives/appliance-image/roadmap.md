@@ -63,14 +63,15 @@ all writes route to USB/tmpfs.
 **Goal:** Key-only SSH, all services loopback-bound, setup auth from the boot
 folder — no default credentials, with lockdown supported.
 
-- [ ] `sshd` key-only; all services bound to `127.0.0.1`.
-- [ ] `setup.txt`: a pre-placed public key **or** a user-chosen one-off setup
-      password mode.
-- [ ] Lockdown step: once a key is installed, disable password auth (the setup
-      password is then single-use).
-- [ ] Verify: with a pre-placed key, password auth is off and only the key works;
-      nothing answers on a non-loopback interface. (Automated key push = client
-      initiative.)
+- [x] `sshd` key-only; all services bound to `127.0.0.1`. (sshd hardening drop-in;
+      app services already loopback from Phase 2.)
+- [x] `setup.txt`: a pre-placed public key **or** a user-chosen one-off setup
+      password mode. (`apply-setup-auth`, auto-detected.)
+- [x] Lockdown step: once a key is installed, disable password auth (the setup
+      password is then single-use). (`lockdown` — password off + `passwd -l` + secret wiped.)
+- [x] Verify: with a pre-placed key, password auth is off and only the key works;
+      nothing answers on a non-loopback interface. (Real sshd integration test, 11
+      checks. LAN-interface check on hardware = Phase 8.)
 
 ## Phase 6: Headless first-boot orchestration + setup log
 
