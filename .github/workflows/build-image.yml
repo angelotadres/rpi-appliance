@@ -5,6 +5,9 @@ on:
     tags: ['v*', '[0-9]*']   # v1.2.3 or 1.0.0-beta1
   workflow_dispatch:
 
+permissions:
+  contents: write   # create releases / upload assets on tag builds
+
 jobs:
   build:
     runs-on: ubuntu-latest
