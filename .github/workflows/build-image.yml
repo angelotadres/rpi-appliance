@@ -2,7 +2,7 @@ name: build-image
 
 on:
   push:
-    tags: ['v*']
+    tags: ['v*', '[0-9]*']   # v1.2.3 or 1.0.0-beta1
   workflow_dispatch:
 
 jobs:
@@ -32,3 +32,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: .pi-gen/deploy/*.img.xz
+          prerelease: ${{ contains(github.ref_name, '-') }}
