@@ -25,6 +25,9 @@ find "$stage_dst" -name '*.sh' -exec chmod +x {} +
 
 cp "$IMG_DIR/config" "$PIGEN_DIR/config"
 
+# Export only OUR final image, not pi-gen's intermediate Lite image.
+rm -f "$PIGEN_DIR/stage2/EXPORT_IMAGE"
+
 cd "$PIGEN_DIR"
 echo "build: running pi-gen..."
 exec ./build-docker.sh
