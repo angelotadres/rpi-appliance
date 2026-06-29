@@ -11,3 +11,10 @@ usermod -aG docker "${USER_NAME}"
 
 # No default password: lock the account; first-boot setup.txt provisions access.
 passwd -l "${USER_NAME}" || true
+
+# Sudoers drop-in (client runs lockdown/poweroff without a password). Enforce 0440
+# and validate before keeping it, so a bad file can't wedge sudo.
+if [ -f /etc/sudoers.d/010-appliance ]; then
+  chmod 440 /etc/sudoers.d/010-appliance
+  visudo -cf /etc/sudoers.d/010-appliance || rm -f /etc/sudoers.d/010-appliance
+fi

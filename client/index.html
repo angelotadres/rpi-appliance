@@ -26,6 +26,29 @@
         <button id="connect-btn" type="submit">Connect</button>
         <p id="status" class="status"></p>
       </form>
+      <p class="switch"><a id="to-setup" href="#">First time? Set up a new appliance →</a></p>
+    </main>
+
+    <!-- First-time setup panel -->
+    <main id="setup" class="panel hidden">
+      <h1>Set up a new appliance</h1>
+      <form id="setup-form" class="form">
+        <label>Host <input id="s-host" placeholder="appliance.local" required /></label>
+        <label>User <input id="s-user" value="pi" required /></label>
+        <label>One-off setup password
+          <input id="s-pass" type="password" placeholder="from setup.txt" required />
+        </label>
+        <label>Key to create/use
+          <input id="s-key" value="~/.ssh/rpi-appliance" required />
+        </label>
+        <label>SSH port <input id="s-ssh_port" type="number" value="22" /></label>
+        <div class="row2">
+          <button id="genkey-btn" type="button">Generate key</button>
+          <button id="setup-btn" type="submit">Set up &amp; lock</button>
+        </div>
+        <p id="setup-status" class="status"></p>
+      </form>
+      <p class="switch"><a id="to-connect" href="#">← Back to connect</a></p>
     </main>
 
     <!-- GUI viewer (shown once the tunnel is up) -->

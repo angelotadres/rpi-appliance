@@ -91,6 +91,31 @@ button:disabled {
   color: #2f6fed;
 }
 
+.status.ok {
+  color: #1f9d55;
+  white-space: pre-line;
+}
+
+.switch {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+}
+
+.switch a {
+  color: #2f6fed;
+  text-decoration: none;
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.row2 #genkey-btn {
+  background: #555;
+}
+
 /* Viewer */
 .viewer {
   display: flex;

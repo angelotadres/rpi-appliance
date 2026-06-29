@@ -28,7 +28,7 @@ trap cleanup EXIT
 # Same options as ssh_args() in client/src-tauri/src/ssh.rs (keep in sync).
 ssh_tunnel() {
   ssh -i "$keydir/id" -N -T \
-    -L "${LOCAL_PORT}:127.0.0.1:5800" \
+    -L "${LOCAL_PORT}:127.0.0.1:5800" -o IdentitiesOnly=yes \
     -p "$SSH_PORT" \
     -o ExitOnForwardFailure=yes \
     -o StrictHostKeyChecking=accept-new \

@@ -41,6 +41,8 @@ pub fn ssh_args(o: &ConnectOpts) -> Vec<String> {
         "-p".into(),
         o.ssh_port.to_string(),
         "-o".into(),
+        "IdentitiesOnly=yes".into(), // use only the provided key
+        "-o".into(),
         "ExitOnForwardFailure=yes".into(),
         "-o".into(),
         "StrictHostKeyChecking=accept-new".into(),

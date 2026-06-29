@@ -1,3 +1,4 @@
+mod setup;
 mod ssh;
 
 use std::process::Child;
@@ -5,6 +6,7 @@ use std::sync::Mutex;
 use std::time::Duration;
 use tauri::Manager;
 
+use setup::SetupOpts;
 use ssh::{drain_stderr, spawn_ssh, wait_for_port, ConnectOpts};
 
 /// The managed ssh tunnel child (at most one at a time).
@@ -56,12 +58,27 @@ fn disconnect(state: tauri::State<Tunnel>) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn generate_key(key_path: String) -> Result<String, String> {
+    setup::generate_key(&key_path)
+}
+
+#[tauri::command]
+fn provision(opts: SetupOpts) -> Result<String, String> {
+    setup::provision(&opts)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .manage(Tunnel::default())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![connect, disconnect])
+        .invoke_handler(tauri::generate_handler![
+            connect,
+            disconnect,
+            generate_key,
+            provision
+        ])
         .on_window_event(|window, event| {
             // Never leave an orphaned ssh tunnel when the window closes.
             if let tauri::WindowEvent::Destroyed = event {

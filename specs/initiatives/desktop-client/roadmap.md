@@ -29,11 +29,11 @@ native window.
 
 **Goal:** From a fresh appliance to key-only access without manual key editing.
 
-- [ ] Generate a client keypair (or pick an existing key).
-- [ ] Push the public key using the one-off setup password (writes `setup.txt`/
-      `authorized_keys` per appliance Phase 5), then run `lockdown` over SSH.
-- [ ] Surface the appliance's `setup.log`/results; handle the password→key transition.
-- [ ] Tests: provisioning logic against the appliance `sshd` test fixture.
+- [x] Generate a client keypair (or pick an existing key). (`generate_key`)
+- [x] Push the public key using the one-off setup password (`SSH_ASKPASS`), then run
+      `lockdown` over SSH. Added a NOPASSWD sudoers drop-in to the appliance.
+- [x] Surface results; verify key login before lockdown (lockout guard).
+- [x] Tests: 5 unit + 9-check integration against an appliance-setup fixture.
 
 ## Phase 3: Shutdown + resilience + settings persistence
 
