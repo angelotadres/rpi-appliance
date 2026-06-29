@@ -1,0 +1,133 @@
+:root {
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  color: #0f0f0f;
+  background: #f6f6f6;
+  color-scheme: light dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Connect panel */
+.panel {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+}
+
+.panel h1 {
+  font-size: 1.4rem;
+  margin: 0 0 1.25rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.form input {
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #cfcfcf;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #fff;
+  color: #0f0f0f;
+}
+
+.ports {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+button {
+  padding: 0.6rem 0.9rem;
+  border: 0;
+  border-radius: 8px;
+  background: #2f6fed;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.status {
+  min-height: 1.2rem;
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.status.error {
+  color: #c0362c;
+}
+
+.status.busy {
+  color: #2f6fed;
+}
+
+/* Viewer */
+.viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.viewer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.75rem;
+  background: #1f1f1f;
+  color: #eee;
+  font-size: 0.85rem;
+}
+
+.viewer-bar button {
+  background: #444;
+  padding: 0.35rem 0.7rem;
+}
+
+#gui {
+  flex: 1;
+  border: 0;
+  width: 100%;
+  background: #000;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #f6f6f6;
+    background: #1b1b1b;
+  }
+  .form input {
+    background: #2a2a2a;
+    color: #f6f6f6;
+    border-color: #444;
+  }
+}

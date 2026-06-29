@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>rpi-appliance</title>
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+
+  <body>
+    <!-- Connect panel -->
+    <main id="connect" class="panel">
+      <h1>Connect to your appliance</h1>
+      <form id="connect-form" class="form">
+        <label>Host <input id="host" placeholder="appliance.local" required /></label>
+        <label>User <input id="user" value="pi" required /></label>
+        <label>Private key
+          <input id="key" placeholder="~/.ssh/id_ed25519" required />
+        </label>
+        <div class="ports">
+          <label>noVNC port <input id="remote_port" type="number" value="5800" /></label>
+          <label>Local port <input id="local_port" type="number" value="5800" /></label>
+          <label>SSH port <input id="ssh_port" type="number" value="22" /></label>
+        </div>
+        <button id="connect-btn" type="submit">Connect</button>
+        <p id="status" class="status"></p>
+      </form>
+    </main>
+
+    <!-- GUI viewer (shown once the tunnel is up) -->
+    <section id="viewer" class="viewer hidden">
+      <header class="viewer-bar">
+        <span id="viewer-label"></span>
+        <button id="disconnect-btn">Disconnect</button>
+      </header>
+      <iframe id="gui" title="appliance GUI"></iframe>
+    </section>
+  </body>
+</html>
