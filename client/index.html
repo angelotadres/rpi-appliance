@@ -55,7 +55,10 @@
     <section id="viewer" class="viewer hidden">
       <header class="viewer-bar">
         <span id="viewer-label"></span>
-        <button id="disconnect-btn">Disconnect</button>
+        <span class="viewer-actions">
+          <button id="shutdown-btn" title="Power off the appliance">Shut down</button>
+          <button id="disconnect-btn">Disconnect</button>
+        </span>
       </header>
       <iframe id="gui" title="appliance GUI"></iframe>
     </section>

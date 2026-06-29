@@ -133,9 +133,18 @@ button:disabled {
   font-size: 0.85rem;
 }
 
+.viewer-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .viewer-bar button {
   background: #444;
   padding: 0.35rem 0.7rem;
+}
+
+.viewer-bar #shutdown-btn {
+  background: #7a2620;
 }
 
 #gui {

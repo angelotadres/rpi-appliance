@@ -1,10 +1,32 @@
 import { invoke } from "@tauri-apps/api/core";
 
 type ConnectInfo = { url: string; local_port: number };
+type Settings = {
+  host: string;
+  user: string;
+  key_path: string;
+  remote_port: number;
+  local_port: number;
+  ssh_port: number;
+};
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const val = (id: string) => ($(id) as HTMLInputElement).value.trim();
 const num = (id: string) => Number(($(id) as HTMLInputElement).value);
+const setVal = (id: string, v: string | number) => {
+  ($(id) as HTMLInputElement).value = String(v);
+};
+
+function connectOpts() {
+  return {
+    host: val("host"),
+    user: val("user"),
+    key_path: val("key"),
+    remote_port: num("remote_port"),
+    local_port: num("local_port"),
+    ssh_port: num("ssh_port"),
+  };
+}
 
 function showViewer(info: ConnectInfo, host: string) {
   $("connect").classList.add("hidden");
@@ -33,16 +55,9 @@ async function onConnect(e: Event) {
   btn.disabled = true;
   setStatus("Opening tunnel…", "busy");
   try {
-    const info = await invoke<ConnectInfo>("connect", {
-      opts: {
-        host,
-        user: val("user"),
-        key_path: val("key"),
-        remote_port: num("remote_port"),
-        local_port: num("local_port"),
-        ssh_port: num("ssh_port"),
-      },
-    });
+    const opts = connectOpts();
+    const info = await invoke<ConnectInfo>("connect", { opts });
+    void invoke("save_settings", { settings: opts }).catch(() => {});
     setStatus("");
     showViewer(info, host);
   } catch (err) {
@@ -59,6 +74,36 @@ async function onDisconnect() {
     console.error(err);
   }
   showConnect("Disconnected.");
+}
+
+async function onShutdown() {
+  if (!confirm("Power off the appliance? It will need a manual power cycle to start again.")) {
+    return;
+  }
+  try {
+    const msg = await invoke<string>("shutdown", { opts: connectOpts() });
+    await invoke("disconnect").catch(() => {});
+    showConnect(msg);
+  } catch (err) {
+    setStatus(String(err), "error");
+  }
+}
+
+async function loadSettings() {
+  try {
+    const s = await invoke<Settings>("load_settings");
+    if (s.host) setVal("host", s.host);
+    setVal("user", s.user);
+    if (s.key_path) setVal("key", s.key_path);
+    setVal("remote_port", s.remote_port);
+    setVal("local_port", s.local_port);
+    setVal("ssh_port", s.ssh_port);
+    // Prefill setup form's host/user too.
+    if (s.host) setVal("s-host", s.host);
+    setVal("s-user", s.user);
+  } catch (err) {
+    console.error(err);
+  }
 }
 
 // ---- First-time setup ----
@@ -116,8 +161,10 @@ async function onSetup(e: Event) {
 window.addEventListener("DOMContentLoaded", () => {
   $("connect-form").addEventListener("submit", onConnect);
   $("disconnect-btn").addEventListener("click", onDisconnect);
+  $("shutdown-btn").addEventListener("click", onShutdown);
   $("to-setup").addEventListener("click", (e) => { e.preventDefault(); showPanel("setup"); });
   $("to-connect").addEventListener("click", (e) => { e.preventDefault(); showPanel("connect"); });
   $("genkey-btn").addEventListener("click", onGenerateKey);
   $("setup-form").addEventListener("submit", onSetup);
+  loadSettings();
 });

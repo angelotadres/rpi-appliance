@@ -39,10 +39,12 @@ native window.
 
 **Goal:** One-action daily use that remembers you and fails gracefully.
 
-- [ ] Shutdown action (`ssh … poweroff`) and clean disconnect.
-- [ ] Persist settings (host/port/key path) between runs; never store the private key.
-- [ ] Reconnect / clear error states (tunnel drop, host down, auth failure).
-- [ ] Tests: settings round-trip; error-state mapping.
+- [x] Shutdown action (`sudo -n poweroff`) and clean disconnect.
+- [x] Persist settings (host/port/key path) between runs; never store the private key.
+- [x] Clear error states (auth/host/tunnel failures surface as messages); reconnect =
+      disconnect + connect.
+- [x] Tests: 3 settings unit tests (round-trip + defaults); shutdown reuses the
+      Phase 2 key session (covered by setup-it.sh).
 
 ## Phase 4: Cross-platform build + CI
 

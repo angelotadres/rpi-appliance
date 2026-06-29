@@ -71,14 +71,20 @@ pub fn password_ssh_args(o: &SetupOpts, remote_cmd: Option<&str>) -> Vec<String>
     a
 }
 
-/// ssh args for a **key-only** verification/command session.
-pub fn pubkey_ssh_args(o: &SetupOpts, key_path: &str, remote_cmd: &str) -> Vec<String> {
+/// ssh args for a **key-only** command session (reusable for verify/lockdown/shutdown).
+pub fn pubkey_ssh_args(
+    host: &str,
+    user: &str,
+    ssh_port: u16,
+    key_path: &str,
+    remote_cmd: &str,
+) -> Vec<String> {
     vec![
         "-i".into(),
         key_path.into(),
         "-T".into(),
         "-p".into(),
-        o.ssh_port.to_string(),
+        ssh_port.to_string(),
         "-o".into(),
         "IdentitiesOnly=yes".into(), // offer ONLY this key (not agent/default keys)
         "-o".into(),
@@ -89,7 +95,7 @@ pub fn pubkey_ssh_args(o: &SetupOpts, key_path: &str, remote_cmd: &str) -> Vec<S
         "PasswordAuthentication=no".into(),
         "-o".into(),
         "BatchMode=yes".into(),
-        format!("{}@{}", o.user, o.host),
+        format!("{}@{}", user, host),
         remote_cmd.into(),
     ]
 }
@@ -148,9 +154,15 @@ fn run_password(o: &SetupOpts, remote_cmd: Option<&str>, stdin_data: Option<&str
     })
 }
 
-fn run_pubkey(o: &SetupOpts, key_path: &str, remote_cmd: &str) -> Result<Run, String> {
+fn run_pubkey(
+    host: &str,
+    user: &str,
+    ssh_port: u16,
+    key_path: &str,
+    remote_cmd: &str,
+) -> Result<Run, String> {
     let out = Command::new("ssh")
-        .args(pubkey_ssh_args(o, key_path, remote_cmd))
+        .args(pubkey_ssh_args(host, user, ssh_port, key_path, remote_cmd))
         .output()
         .map_err(|e| format!("could not start ssh: {e}"))?;
     Ok(Run {
@@ -206,7 +218,7 @@ pub fn provision(o: &SetupOpts) -> Result<String, String> {
     log.push_str("[ OK ] public key installed\n");
 
     // 2. Verify a key-only login BEFORE disabling passwords.
-    let v = run_pubkey(o, &key_path, "echo verified")?;
+    let v = run_pubkey(&o.host, &o.user, o.ssh_port, &key_path, "echo verified")?;
     if !v.ok || !v.out.contains("verified") {
         return Err(format!(
             "Key was installed but a key-only login did not work, so lockdown was skipped to avoid locking you out. {}",
@@ -216,7 +228,13 @@ pub fn provision(o: &SetupOpts) -> Result<String, String> {
     log.push_str("[ OK ] key-only login verified\n");
 
     // 3. Lock down: disable password auth + invalidate the setup password.
-    let l = run_pubkey(o, &key_path, "sudo -n /opt/appliance/bin/lockdown")?;
+    let l = run_pubkey(
+        &o.host,
+        &o.user,
+        o.ssh_port,
+        &key_path,
+        "sudo -n /opt/appliance/bin/lockdown",
+    )?;
     if !l.ok {
         return Err(format!(
             "Key works, but lockdown failed (is the appliance sudoers drop-in present?). {}",
@@ -225,6 +243,19 @@ pub fn provision(o: &SetupOpts) -> Result<String, String> {
     }
     log.push_str("[ OK ] appliance locked to key-only\n");
     Ok(log)
+}
+
+/// Power the appliance off over the key session (NOPASSWD sudo).
+pub fn shutdown(host: &str, user: &str, ssh_port: u16, key_path: &str) -> Result<String, String> {
+    let key = expand_tilde(key_path);
+    let r = run_pubkey(host, user, ssh_port, &key, "sudo -n poweroff")?;
+    // `poweroff` often drops the connection as the host goes down; treat a closed
+    // connection as success too.
+    if r.ok || r.out.is_empty() || r.out.contains("closed") {
+        Ok("Appliance is shutting down.".into())
+    } else {
+        Err(format!("Shutdown failed: {}", r.out))
+    }
 }
 
 #[cfg(test)]
@@ -252,11 +283,13 @@ mod tests {
 
     #[test]
     fn pubkey_session_is_key_only() {
-        let a = pubkey_ssh_args(&o(), "/k", "echo verified");
+        let a = pubkey_ssh_args("h", "pi", 22, "/k", "echo verified");
         assert!(a.contains(&"PasswordAuthentication=no".to_string()));
         assert!(a.contains(&"BatchMode=yes".to_string()));
+        assert!(a.contains(&"IdentitiesOnly=yes".to_string()));
         let i = a.iter().position(|x| x == "-i").unwrap();
         assert_eq!(a[i + 1], "/k");
+        assert_eq!(a.last().unwrap(), "echo verified");
     }
 
     #[test]

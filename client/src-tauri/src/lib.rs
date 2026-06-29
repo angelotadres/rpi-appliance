@@ -1,11 +1,14 @@
+mod settings;
 mod setup;
 mod ssh;
 
+use std::path::PathBuf;
 use std::process::Child;
 use std::sync::Mutex;
 use std::time::Duration;
 use tauri::Manager;
 
+use settings::Settings;
 use setup::SetupOpts;
 use ssh::{drain_stderr, spawn_ssh, wait_for_port, ConnectOpts};
 
@@ -68,6 +71,32 @@ fn provision(opts: SetupOpts) -> Result<String, String> {
     setup::provision(&opts)
 }
 
+#[tauri::command]
+fn shutdown(opts: ConnectOpts) -> Result<String, String> {
+    setup::shutdown(&opts.host, &opts.user, opts.ssh_port, &opts.key_path)
+}
+
+fn settings_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
+    app.path()
+        .app_config_dir()
+        .map(|d| d.join("settings.json"))
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn load_settings(app: tauri::AppHandle) -> Settings {
+    match settings_path(&app) {
+        Ok(p) => settings::read_settings(&p),
+        Err(_) => Settings::default(),
+    }
+}
+
+#[tauri::command]
+fn save_settings(app: tauri::AppHandle, settings: Settings) -> Result<(), String> {
+    let p = settings_path(&app)?;
+    settings::write_settings(&p, &settings).map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -77,7 +106,10 @@ pub fn run() {
             connect,
             disconnect,
             generate_key,
-            provision
+            provision,
+            shutdown,
+            load_settings,
+            save_settings
         ])
         .on_window_event(|window, event| {
             // Never leave an orphaned ssh tunnel when the window closes.
