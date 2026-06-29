@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# usb-preflight: the required USB writable store must be mounted and writable before
+# the app starts. On failure, print a single-line reason to stderr and exit non-zero
+# (the Phase 6 first-boot service captures that reason into the setup log).
+#
+#   APPLIANCE_USB_MOUNT      mount path to check   (default /mnt/appliance)
+#   APPLIANCE_REQUIRE_MOUNT  require it to be an actual mountpoint (default 1)
+set -euo pipefail
+
+MOUNT="${APPLIANCE_USB_MOUNT:-/mnt/appliance}"
+REQUIRE_MOUNT="${APPLIANCE_REQUIRE_MOUNT:-1}"
+
+reason() { echo "usb-preflight: $*" >&2; exit 1; }
+
+is_mountpoint() {
+  local d="$1"
+  if command -v mountpoint >/dev/null 2>&1; then
+    mountpoint -q "$d"; return
+  fi
+  # Portable fallback: a mountpoint's device id differs from its parent's.
+  local dev par
+  if stat -f '%d' / >/dev/null 2>&1; then            # BSD / macOS
+    dev=$(stat -f '%d' "$d" 2>/dev/null) || return 1
+    par=$(stat -f '%d' "$d/.." 2>/dev/null) || return 1
+  else                                               # GNU / Linux
+    dev=$(stat -c '%d' "$d" 2>/dev/null) || return 1
+    par=$(stat -c '%d' "$d/.." 2>/dev/null) || return 1
+  fi
+  [ "$dev" != "$par" ]
+}
+
+[ -d "$MOUNT" ] || reason "USB store path '$MOUNT' does not exist (is the drive plugged in and labelled APPLIANCE?)"
+
+if [ "$REQUIRE_MOUNT" = "1" ]; then
+  is_mountpoint "$MOUNT" || reason "'$MOUNT' is not a mountpoint — the USB drive (ext4, label APPLIANCE) is not mounted"
+fi
+
+probe="$MOUNT/.appliance-write-test.$$"
+if ! ( : > "$probe" ) 2>/dev/null; then
+  reason "USB store '$MOUNT' is not writable"
+fi
+rm -f "$probe"
+
+echo "usb-preflight: ok ($MOUNT mounted and writable)"

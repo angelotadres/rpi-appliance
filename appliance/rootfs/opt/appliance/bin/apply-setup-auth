@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Apply boot-folder setup auth from <config>/setup.txt. Two mutually exclusive modes,
+# auto-detected from the first meaningful line:
+#   - a public key (ssh-ed25519 / ssh-rsa / ecdsa-... ) -> install authorized_keys,
+#     keep password auth OFF (key-only immediately).
+#   - "password=SECRET" (or "password: SECRET")         -> set the user's password and
+#     open a TEMPORARY password window (removed by `lockdown`).
+# No default credential ever ships; an absent/unknown setup.txt is an error whose
+# reason is captured by the Phase 6 setup log.
+set -euo pipefail
+
+CONFIG_DIR="${APPLIANCE_CONFIG_DIR:-/boot/firmware/appliance}"
+USER_NAME="${APPLIANCE_USER:-pi}"
+SETUP_DROPIN="${SSHD_SETUP_DROPIN:-/etc/ssh/sshd_config.d/00-appliance-setup.conf}"
+
+setup="$CONFIG_DIR/setup.txt"
+reason() { echo "apply-setup-auth: $*" >&2; exit 1; }
+
+[ -f "$setup" ] || reason "no setup.txt in $CONFIG_DIR — place a public key or 'password=...'"
+
+line="$(grep -vE '^[[:space:]]*#' "$setup" | grep -vE '^[[:space:]]*$' | head -1 || true)"
+[ -n "$line" ] || reason "setup.txt is empty"
+
+install_pubkey() {
+  local home; home="$(getent passwd "$USER_NAME" | cut -d: -f6)"
+  [ -n "$home" ] || reason "user '$USER_NAME' not found"
+  install -d -m 700 -o "$USER_NAME" -g "$USER_NAME" "$home/.ssh"
+  printf '%s\n' "$1" > "$home/.ssh/authorized_keys"
+  chmod 600 "$home/.ssh/authorized_keys"
+  chown "$USER_NAME:$USER_NAME" "$home/.ssh/authorized_keys"
+}
+
+case "$line" in
+  ssh-ed25519\ *|ssh-rsa\ *|ssh-dss\ *|ecdsa-sha2-*\ *|sk-ssh-*\ *|sk-ecdsa-*\ *)
+    install_pubkey "$line"
+    printf '%s\n' "PasswordAuthentication no" > "$SETUP_DROPIN"
+    echo "apply-setup-auth: installed public key for '$USER_NAME'; password auth off (key-only)."
+    ;;
+  password=*|password:\ *|password:*)
+    pw="${line#password}"; pw="${pw#[:=]}"; pw="${pw#"${pw%%[![:space:]]*}"}"
+    [ -n "$pw" ] || reason "password mode but no password given"
+    echo "${USER_NAME}:${pw}" | chpasswd
+    printf '%s\n' "PasswordAuthentication yes" > "$SETUP_DROPIN"
+    echo "apply-setup-auth: setup-password window OPEN for '$USER_NAME' (single-use until lockdown)."
+    ;;
+  *)
+    reason "unrecognized setup.txt line: expected an SSH public key or 'password=...'"
+    ;;
+esac

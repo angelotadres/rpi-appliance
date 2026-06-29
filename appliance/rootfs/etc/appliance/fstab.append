@@ -1,0 +1,6 @@
+# Appended to /etc/fstab by the image build (Phase 7). The required USB writable
+# store: a pre-formatted ext4 drive labelled APPLIANCE, mounted at /mnt/appliance.
+# `nofail` so a missing drive never wedges boot — the app refusal is enforced by
+# usb-preflight, not by blocking boot. `x-systemd.device-timeout` keeps boot from
+# stalling waiting for an absent device.
+LABEL=APPLIANCE /mnt/appliance ext4 defaults,nofail,x-systemd.device-timeout=10s 0 2

@@ -146,7 +146,8 @@ No database. The shapes that matter:
 
 ## Dependencies
 
-- pi-gen, Docker, `jlesage/baseimage-gui`, systemd (appliance side).
+- pi-gen, Docker, `jlesage/baseimage-gui`, systemd, `yq` (compose sanitize) —
+  appliance side.
 - OpenSSH (both ends — OS-provided).
 - Tauri / Rust toolchain + OS webview (client side).
 - **Risk flags:** Tauri build/release per-OS and code-signing/notarization (deferred
@@ -161,16 +162,21 @@ No database. The shapes that matter:
 
 ## Open Questions
 
-- **Setup-password lifecycle:** is disabling password auth sufficient, or should the
-  first-boot script also wipe the password line from the boot partition?
+- ~~**Setup-password lifecycle:**~~ **Resolved (Phase 5):** `lockdown` does all
+  three — `PasswordAuthentication no`, `passwd -l` the user, **and** strips the
+  `password=` line from `setup.txt` so the secret doesn't linger on the FAT card.
 - **Shutdown mechanism:** client-issued `ssh … poweroff` only, or also keep a tiny
   loopback-bound shutdown service as a fallback?
-- **Compose security enforcement:** exact mechanism for guaranteeing the GUI binds
-  loopback regardless of the user's compose (override published ports, a fixed
-  network, or a validation/reject step).
-- **USB store provisioning:** fixed label vs. UUID; whether the appliance formats a
-  blank drive on first boot or requires the user to pre-format ext4 with a known
-  label; how compose volume paths map onto it.
+- ~~**Compose security enforcement:**~~ **Resolved (Phase 2):** `compose-up`
+  sanitizes the user's compose with `yq` — strips every service's `ports`, then
+  republishes only the GUI service (label `appliance.gui=true`, or the sole
+  service) as `127.0.0.1:5800`. All other keys pass through untouched, so
+  passthrough is unaffected. See `appliance/rootfs/opt/appliance/`.
+- ~~**USB store provisioning:**~~ **Resolved (Phase 3):** mount by **label
+  `APPLIANCE`** at `/mnt/appliance` via `/etc/fstab` (`nofail`); **require a
+  pre-formatted ext4 drive — never auto-format**; Docker `data-root` moved onto the
+  USB so all volumes/images live there; user composes place bind mounts via
+  `${APPLIANCE_DATA}`. `usb-preflight` refuses app start when it's absent.
 - **Tauri vs. Go+webview:** Tauri is the default; revisit only if the Rust toolchain
   proves heavy for this small app.
 - **Dev-loop emulation:** how much of the client↔appliance flow can be exercised

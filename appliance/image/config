@@ -1,0 +1,18 @@
+# pi-gen config for the standard appliance image (Bookworm Lite + stage-appliance).
+IMG_NAME='rpi-appliance'
+RELEASE='bookworm'
+TARGET_HOSTNAME='appliance'
+FIRST_USER_NAME='pi'
+# pi-gen requires a first-user password; the account is LOCKED in 03-run-chroot.sh, so
+# this is never a usable credential. Access is provisioned from setup.txt at first boot.
+FIRST_USER_PASS='locked-no-default-credential'
+DISABLE_FIRST_BOOT_USER_RENAME='1'
+ENABLE_SSH='1'
+LOCALE_DEFAULT='en_US.UTF-8'
+KEYBOARD_KEYMAP='us'
+TIMEZONE_DEFAULT='Etc/UTC'
+# Lite (stage2) + our appliance stage. build.sh copies stage-appliance into pi-gen.
+STAGE_LIST='stage0 stage1 stage2 ./stage-appliance'
+# Produce a compressed .img.xz (not the default zip).
+DEPLOY_COMPRESSION='xz'
+COMPRESSION_LEVEL='6'

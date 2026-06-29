@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Enable a read-only (overlayfs) SD root on Raspberry Pi OS. All RAM-overlay writes
+# are discarded on reboot; app data and Docker already live on the USB (Phase 3), so
+# an abrupt power cut cannot corrupt the system or lose data.
+#
+# The /boot (FAT) partition is intentionally LEFT WRITABLE so the first-boot setup
+# log (Phase 6) can be written without a remount.
+#
+# Idempotent. No-op (with a message) when raspi-config is absent, so it's safe to run
+# off-Pi and in CI.
+set -euo pipefail
+
+if ! command -v raspi-config >/dev/null 2>&1; then
+  echo "enable-readonly-root: raspi-config not found — not a Raspberry Pi OS host; skipping." >&2
+  exit 0
+fi
+
+# do_overlayfs 0 => ENABLE the overlay filesystem (raspi-config uses 0 for "enable").
+echo "enable-readonly-root: enabling overlayfs read-only root via raspi-config..."
+raspi-config nonint do_overlayfs 0
+
+echo "enable-readonly-root: done. A reboot is required for the overlay to take effect."
+echo "enable-readonly-root: /boot remains writable (setup log); all data is on the USB store."
