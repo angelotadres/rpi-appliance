@@ -50,7 +50,9 @@ native window.
 
 **Goal:** Installable builds for all three desktops.
 
-- [ ] Tauri bundles for macOS, Windows, Linux built in CI; artifacts published.
-- [ ] Document unsigned first-launch steps (code-signing deferred per tech-stack).
-- [ ] Verify: macOS bundle runs locally; Windows/Linux built in CI (unverified until
-      community-confirmed).
+- [x] Tauri bundles for macOS, Windows, Linux built in CI; artifacts published.
+      (`build-client.yml` matrix; runs in CI.)
+- [x] Document unsigned first-launch steps (code-signing deferred per tech-stack).
+      (`client/README.md`.)
+- [x] Verify: macOS bundle builds locally (`.app` + `.dmg`). Windows/Linux built in CI,
+      unverified until community-confirmed.
