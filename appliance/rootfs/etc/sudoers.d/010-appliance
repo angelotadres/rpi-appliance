@@ -1,0 +1,4 @@
+# The appliance user runs these privileged actions for the client without a password.
+# The account password is locked (no default credential); NOPASSWD sudo is unaffected
+# by that lock. Keep this list tight — only what the client drives.
+pi ALL=(root) NOPASSWD: /opt/appliance/bin/lockdown, /sbin/poweroff, /usr/sbin/poweroff, /sbin/shutdown, /usr/sbin/shutdown
